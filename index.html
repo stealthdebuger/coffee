@@ -502,9 +502,8 @@ async function apiGet(params){
   const r = await fetch(u,{redirect:'follow'});
   return r.json();
 }
-async function apiPost(body){
-  const r = await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),redirect:'follow'});
-  return r.json();
+async function apiSave(phone, card_id, score){
+  return apiGet({ action:'saveResult', phone, card_id, score });
 }
 
 // ── SCREEN ────────────────────────────────────────────────────────────────────
@@ -720,7 +719,7 @@ const App = {
   async next(){
     this.setPhase('saving');
     try{
-      await apiPost({action:'saveResult', phone:S.phone, card_id:S.cards[S.idx].id, score:S.score||0});
+      await apiSave(S.phone, S.cards[S.idx].id, S.score||0);
     }catch(_){}
 
     if(S.idx<S.cards.length-1){
