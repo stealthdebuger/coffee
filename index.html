@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Англійська з кавою ☕</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,400&family=Lato:wght@300;400;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ══ RESET & BASE ══════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Lato',sans-serif;
+  background:var(--foam);
+  color:var(--ink);
+  overscroll-behavior:none;
+}
+
+/* ══ DESIGN TOKENS ═════════════════════════════════════════════════════════ */
+:root{
+  --espresso:#1C0A00;
+  --roast:   #3D1C02;
+  --coffee:  #6F3D0D;
+  --latte:   #C9956C;
+  --cream:   #F5E6D3;
+  --foam:    #FDF8F2;
+  --mint:    #2ECC8F;
+  --amber:   #F0A500;
+  --berry:   #E85D75;
+  --sky:     #4A90D9;
+  --ash:     #8B7355;
+  --mist:    #C4A882;
+  --ink:     #1A0F00;
+  --card-shadow: 0 4px 20px rgba(28,10,0,.09);
+  --r: 18px;
+}
+
+/* ══ SCREENS ═══════════════════════════════════════════════════════════════ */
+.screen{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  opacity:0;pointer-events:none;
+  transition:opacity .25s ease,transform .25s ease;
+  transform:translateY(8px);
+}
+.screen.active{
+  opacity:1;pointer-events:all;transform:translateY(0);
+}
+
+/* ══ SCROLLABLE BODY ═══════════════════════════════════════════════════════ */
+.scroll{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:16px 16px 32px;
+  -webkit-overflow-scrolling:touch;
+}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ══ HEADER ════════════════════════════════════════════════════════════════ */
+.hdr{
+  background:var(--espresso);
+  padding:env(safe-area-inset-top,12px) 16px 14px;
+  display:flex;align-items:center;gap:10px;
+  flex-shrink:0;
+  position:relative;
+}
+.hdr-back{
+  background:none;border:none;color:var(--latte);
+  font-size:22px;cursor:pointer;padding:4px 8px 4px 0;
+  display:none;
+}
+.hdr-title{flex:1}
+.hdr-title h1{
+  font-family:'Playfair Display',serif;
+  font-size:19px;font-weight:700;color:var(--cream);
+}
+.hdr-title p{font-size:11px;color:var(--latte);margin-top:2px}
+.xp-pill{
+  background:var(--amber);color:#fff;
+  font-size:11px;font-weight:700;
+  padding:4px 10px;border-radius:50px;
+  white-space:nowrap;
+}
+
+/* ══ CARD ══════════════════════════════════════════════════════════════════ */
+.card{
+  background:#fff;border-radius:var(--r);
+  padding:18px;box-shadow:var(--card-shadow);
+  margin-bottom:12px;
+}
+
+/* ══ BUTTON ════════════════════════════════════════════════════════════════ */
+.btn{
+  display:block;width:100%;padding:15px;
+  border-radius:50px;border:none;
+  font-family:'Lato',sans-serif;font-size:15px;font-weight:700;
+  cursor:pointer;text-align:center;
+  transition:transform .12s,opacity .12s;
+  margin-bottom:10px;
+}
+.btn:last-child{margin-bottom:0}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--espresso);color:var(--cream);box-shadow:0 4px 16px rgba(28,10,0,.25)}
+.btn-ghost{background:transparent;color:var(--espresso);border:1.5px solid var(--espresso)}
+.btn-latte{background:var(--latte);color:#fff}
+.btn:disabled{opacity:.45;pointer-events:none}
+
+/* ══ WELCOME ═══════════════════════════════════════════════════════════════ */
+#s-welcome{
+  background:var(--espresso);
+  justify-content:center;align-items:center;
+  text-align:center;padding:40px 28px;gap:0;
+  overflow-y:auto;
+}
+.wlc-cup{font-size:76px;animation:float 3.5s ease-in-out infinite;margin-bottom:24px}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.wlc-title{
+  font-family:'Playfair Display',serif;
+  font-size:38px;font-weight:800;
+  color:var(--cream);line-height:1.1;margin-bottom:14px;
+}
+.wlc-sub{
+  font-size:15px;color:var(--latte);
+  line-height:1.7;margin-bottom:32px;
+}
+.features{display:flex;flex-direction:column;gap:10px;margin-bottom:36px;width:100%}
+.feat{
+  display:flex;align-items:center;gap:14px;
+  background:rgba(255,255,255,.07);
+  border-radius:14px;padding:13px 16px;text-align:left;
+}
+.feat-icon{font-size:22px;flex-shrink:0}
+.feat p{color:var(--cream);font-size:13px;line-height:1.45}
+
+/* ══ LOADING ═══════════════════════════════════════════════════════════════ */
+#s-loading{justify-content:center;align-items:center;gap:16px;background:var(--foam)}
+.loader-cup{font-size:54px;animation:cup-pulse 1.1s ease-in-out infinite}
+@keyframes cup-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.14);opacity:.75}}
+.loader-title{font-family:'Playfair Display',serif;font-size:20px;color:var(--espresso);font-weight:700}
+.loader-sub{font-size:13px;color:var(--ash)}
+
+/* ══ DASHBOARD ═════════════════════════════════════════════════════════════ */
+#s-dash{background:var(--foam)}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat{
+  background:#fff;border-radius:var(--r);padding:16px 12px;
+  box-shadow:var(--card-shadow);text-align:center;
+}
+.stat-ico{font-size:22px}
+.stat-val{
+  font-family:'Playfair Display',serif;
+  font-size:30px;font-weight:800;margin:4px 0 2px;
+}
+.stat-lbl{font-size:11px;color:var(--ash)}
+.prog-wrap{background:var(--cream);border-radius:50px;height:9px;overflow:hidden;margin-top:8px}
+.prog-fill{height:100%;border-radius:50px;background:var(--latte);transition:width 1s cubic-bezier(.4,0,.2,1)}
+.quote-card{
+  background:var(--espresso);border-radius:var(--r);padding:20px;
+  box-shadow:0 8px 24px rgba(28,10,0,.28);margin-bottom:12px;
+}
+.quote-card blockquote{
+  font-family:'Playfair Display',serif;font-style:italic;
+  color:var(--cream);font-size:14px;line-height:1.7;
+}
+.quote-card cite{color:var(--latte);font-size:12px;margin-top:8px;display:block}
+
+/* ══ SPEAKING ══════════════════════════════════════════════════════════════ */
+#s-speak{background:var(--foam)}
+.dots{display:flex;justify-content:center;gap:7px;padding:12px 0 4px;flex-shrink:0}
+.dot{height:9px;border-radius:50px;transition:all .3s}
+.dot.active{width:28px;background:var(--latte)}
+.dot.done{width:9px;background:var(--mint)}
+.dot.pending{width:9px;background:var(--cream)}
+
+/* Phrase card */
+.phrase-lbl{font-size:12px;color:var(--ash);margin-bottom:8px}
+.phrase-txt{
+  font-family:'Playfair Display',serif;
+  font-size:26px;font-weight:800;color:var(--espresso);
+  line-height:1.25;margin-bottom:8px;
+}
+.phrase-tr{font-size:14px;color:var(--ash);margin-bottom:6px}
+.phrase-hint{
+  font-family:'Source Code Pro',monospace;
+  font-size:13px;color:var(--coffee);
+}
+.phrase-comment{
+  margin-top:12px;padding:10px 14px;
+  background:#FFF8E8;
+  border-left:3px solid var(--amber);
+  border-radius:0 10px 10px 0;
+  font-size:13px;color:var(--ink);line-height:1.5;
+}
+
+/* Mic block */
+.mic-block{
+  background:#fff;border-radius:24px;padding:28px 20px;
+  box-shadow:var(--card-shadow);
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  margin-bottom:12px;
+}
+.mic-hint{font-size:13px;color:var(--ash);text-align:center}
+.mic-btn{
+  width:88px;height:88px;border-radius:50%;border:none;
+  font-size:38px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  user-select:none;-webkit-user-select:none;
+  transition:transform .12s;
+}
+.mic-btn.idle{
+  background:var(--espresso);
+  box-shadow:0 6px 22px rgba(28,10,0,.3);
+}
+.mic-btn.live{
+  background:var(--berry);
+  animation:mic-pulse .75s ease-in-out infinite alternate;
+}
+@keyframes mic-pulse{
+  from{transform:scale(1);box-shadow:0 0 0 0 rgba(232,93,117,.4)}
+  to{transform:scale(1.1);box-shadow:0 0 0 18px rgba(232,93,117,0)}
+}
+/* wave bars */
+.waves{display:flex;align-items:center;gap:5px;height:42px}
+.wbar{width:5px;background:var(--latte);border-radius:3px}
+.waves.on .wbar{animation:wave .4s ease-in-out infinite alternate}
+.wbar:nth-child(1){animation-delay:0s}
+.wbar:nth-child(2){animation-delay:.07s}
+.wbar:nth-child(3){animation-delay:.14s}
+.wbar:nth-child(4){animation-delay:.21s}
+.wbar:nth-child(5){animation-delay:.14s}
+.wbar:nth-child(6){animation-delay:.07s}
+.wbar:nth-child(7){animation-delay:0s}
+@keyframes wave{from{height:5px}to{height:36px}}
+
+.live-box{
+  background:var(--foam);border-radius:12px;
+  padding:11px 14px;width:100%;
+  font-style:italic;color:var(--espresso);font-size:14px;
+  text-align:center;min-height:44px;
+  display:flex;align-items:center;justify-content:center;
+}
+.stop-btn{
+  background:none;border:none;
+  color:var(--berry);font-size:13px;font-weight:700;
+  cursor:pointer;padding:4px 12px;
+}
+
+/* Result */
+.score-num{
+  font-family:'Playfair Display',serif;
+  font-size:78px;font-weight:800;line-height:1;
+  text-align:center;
+}
+.score-lbl{font-size:12px;color:var(--ash);text-align:center;margin-top:2px}
+.word-row{display:flex;flex-wrap:wrap;gap:7px;justify-content:center}
+.wchip{
+  padding:5px 13px;border-radius:50px;
+  font-size:13px;font-weight:700;border:1.5px solid;
+}
+.wchip.ok{background:rgba(46,204,143,.1);color:var(--mint);border-color:var(--mint)}
+.wchip.bad{background:rgba(232,93,117,.09);color:var(--berry);border-color:var(--berry)}
+.fb-row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--foam);border-radius:14px;padding:13px;width:100%;
+}
+.fb-ico{font-size:26px;flex-shrink:0}
+.fb-txt{font-size:13px;color:var(--ink);line-height:1.5}
+.recog-box{
+  background:var(--foam);border-radius:12px;
+  padding:12px 14px;width:100%;
+}
+.recog-lbl{font-size:11px;color:var(--ash);margin-bottom:4px}
+.recog-txt{font-style:italic;font-size:14px;color:var(--espresso)}
+
+/* Saving */
+.saving{display:flex;align-items:center;gap:8px;justify-content:center;padding:8px 0}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--latte);animation:sdot .6s ease-in-out infinite alternate}
+.sdot:nth-child(2){animation-delay:.2s}
+.sdot:nth-child(3){animation-delay:.4s}
+@keyframes sdot{from{transform:translateY(0)}to{transform:translateY(-8px)}}
+.saving-lbl{font-size:13px;color:var(--ash)}
+
+/* ══ ALL DONE ══════════════════════════════════════════════════════════════ */
+#s-done{
+  background:var(--espresso);
+  justify-content:center;align-items:center;
+  text-align:center;padding:40px 28px;gap:16px;
+}
+#s-done .trophy{font-size:80px;animation:float 3s ease-in-out infinite}
+#s-done h2{font-family:'Playfair Display',serif;font-size:30px;color:var(--cream);font-weight:800}
+#s-done p{color:var(--latte);font-size:15px;line-height:1.7}
+.done-stats{
+  display:flex;gap:20px;
+  background:rgba(255,255,255,.08);border-radius:16px;padding:16px 24px;
+}
+.done-stat{text-align:center}
+.done-stat .val{font-family:'Playfair Display',serif;font-size:28px;font-weight:800;color:var(--amber)}
+.done-stat .lbl{font-size:11px;color:var(--latte)}
+
+/* ══ ERROR BOX ═════════════════════════════════════════════════════════════ */
+.err-box{
+  background:rgba(232,93,117,.08);
+  border-left:3px solid var(--berry);
+  border-radius:0 12px 12px 0;
+  padding:12px 14px;
+  font-size:13px;color:var(--berry);line-height:1.5;
+  margin-bottom:10px;
+}
+</style>
+</head>
+<body>
+
+<!-- ══ WELCOME ══════════════════════════════════════════════════════════════ -->
+<div id="s-welcome" class="screen">
+  <div class="wlc-cup">☕</div>
+  <h1 class="wlc-title">Англійська<br>з кавою</h1>
+  <p class="wlc-sub">Вчись говорити — не боятись.<br>5 фраз на день, поки кава гаряча.</p>
+  <div class="features">
+    <div class="feat"><span class="feat-icon">🎤</span><p>Вимовляй фрази вголос — ШІ оцінить вимову в реальному часі</p></div>
+    <div class="feat"><span class="feat-icon">📊</span><p>Точність кожного слова — одразу після запису</p></div>
+    <div class="feat"><span class="feat-icon">🔥</span><p>Збирай серію днів і відстежуй прогрес в таблиці</p></div>
+  </div>
+  <button class="btn btn-latte" style="max-width:300px" onclick="App.welcome()">Почати ☕</button>
+</div>
+
+<!-- ══ LOADING ══════════════════════════════════════════════════════════════ -->
+<div id="s-loading" class="screen">
+  <div class="loader-cup">☕</div>
+  <p class="loader-title">Завантажую карточки…</p>
+  <p class="loader-sub" id="load-sub">Готую каву</p>
+</div>
+
+<!-- ══ DASHBOARD ════════════════════════════════════════════════════════════ -->
+<div id="s-dash" class="screen">
+  <div class="hdr">
+    <div class="hdr-title">
+      <h1 id="d-hello">Привіт! ☕</h1>
+      <p id="d-sub">Готовий вчитись?</p>
+    </div>
+    <div class="xp-pill" id="d-streak">🔥 0</div>
+  </div>
+  <div class="scroll">
+    <div class="stats-grid">
+      <div class="stat">
+        <div class="stat-ico">📚</div>
+        <div class="stat-val" id="s-done-cnt" style="color:var(--sky)">0</div>
+        <div class="stat-lbl">Виконано</div>
+      </div>
+      <div class="stat">
+        <div class="stat-ico">🎯</div>
+        <div class="stat-val" id="s-rem" style="color:var(--amber)">0</div>
+        <div class="stat-lbl">Залишилось</div>
+      </div>
+      <div class="stat">
+        <div class="stat-ico">⚡</div>
+        <div class="stat-val" id="s-xp" style="color:var(--latte)">0</div>
+        <div class="stat-lbl">Всього XP</div>
+      </div>
+      <div class="stat">
+        <div class="stat-ico">🔥</div>
+        <div class="stat-val" id="s-streak" style="color:var(--berry)">0</div>
+        <div class="stat-lbl">Днів поспіль</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-weight:700;font-size:14px">Прогрес курсу</span>
+        <span style="font-size:12px;color:var(--ash)" id="d-prog-lbl">0/0</span>
+      </div>
+      <div class="prog-wrap"><div class="prog-fill" id="d-prog-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="quote-card">
+      <blockquote>"The secret of learning a language: stop being embarrassed and start being caffeinated."</blockquote>
+      <cite>— Невідомий кавоман</cite>
+    </div>
+
+    <button class="btn btn-primary" id="d-btn" onclick="App.startSession()">☕ Почати сесію</button>
+  </div>
+</div>
+
+<!-- ══ SPEAKING ══════════════════════════════════════════════════════════════ -->
+<div id="s-speak" class="screen">
+  <div class="hdr">
+    <button class="hdr-back" id="sp-back" onclick="App.backToDash()">←</button>
+    <div class="hdr-title">
+      <h1>Говори 🎤</h1>
+      <p id="sp-counter">1/5</p>
+    </div>
+    <div class="xp-pill">+5 XP</div>
+  </div>
+  <div class="dots" id="sp-dots"></div>
+  <div class="scroll" style="padding-top:4px">
+
+    <!-- phrase -->
+    <div class="card" id="phrase-card">
+      <p class="phrase-lbl">Вимов цю фразу:</p>
+      <p class="phrase-txt" id="p-phrase">…</p>
+      <p class="phrase-tr"  id="p-tr"></p>
+      <p class="phrase-hint" id="p-hint"></p>
+      <div class="phrase-comment" id="p-comment" style="display:none"></div>
+    </div>
+
+    <!-- mic block -->
+    <div class="mic-block" id="mic-block">
+
+      <!-- idle hint -->
+      <p class="mic-hint" id="mic-hint">Натисни і тримай або просто натисни</p>
+
+      <!-- mic button -->
+      <button class="mic-btn idle" id="mic-btn"
+        ontouchstart="App.ts(event)" ontouchend="App.te(event)"
+        onclick="App.mc()">🎤</button>
+
+      <!-- waves -->
+      <div class="waves" id="waves">
+        <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+        <div class="wbar"></div><div class="wbar"></div><div class="wbar"></div>
+        <div class="wbar"></div>
+      </div>
+
+      <!-- live text -->
+      <div class="live-box" id="live-box" style="display:none">Говори зараз…</div>
+      <button class="stop-btn" id="stop-btn" style="display:none" onclick="App.stopListen()">■ Зупинити</button>
+
+      <!-- result -->
+      <div id="result-block" style="display:none;flex-direction:column;align-items:center;gap:14px;width:100%">
+        <div class="score-num" id="score-num">0%</div>
+        <p class="score-lbl">Точність вимови</p>
+        <div class="prog-wrap" style="width:100%">
+          <div class="prog-fill" id="score-bar" style="width:0%"></div>
+        </div>
+        <div class="recog-box">
+          <p class="recog-lbl">Ти сказав:</p>
+          <p class="recog-txt" id="recog-txt">…</p>
+        </div>
+        <div class="word-row" id="word-row"></div>
+        <div class="fb-row" id="fb-row">
+          <span class="fb-ico" id="fb-ico">☕</span>
+          <p class="fb-txt" id="fb-txt">…</p>
+        </div>
+      </div>
+
+      <!-- saving -->
+      <div class="saving" id="saving-block" style="display:none">
+        <div class="sdot"></div><div class="sdot"></div><div class="sdot"></div>
+        <span class="saving-lbl">Зберігаю результат…</span>
+      </div>
+
+    </div><!-- /mic-block -->
+
+    <!-- action buttons -->
+    <div id="act-btns" style="display:none">
+      <button class="btn btn-ghost" id="btn-retry" onclick="App.retry()">🔄 Спробувати ще раз</button>
+      <button class="btn btn-primary" id="btn-next" onclick="App.next()">Наступна →</button>
+    </div>
+
+    <div class="err-box" id="sp-err" style="display:none"></div>
+  </div>
+</div>
+
+<!-- ══ ALL DONE ══════════════════════════════════════════════════════════════ -->
+<div id="s-done" class="screen">
+  <div class="trophy">🏆</div>
+  <h2>Сесію завершено!</h2>
+  <div class="done-stats" id="done-stats">
+    <div class="done-stat"><div class="val" id="dn-cards">0</div><div class="lbl">Карточок</div></div>
+    <div class="done-stat"><div class="val" id="dn-avg">0%</div><div class="lbl">Середній %</div></div>
+    <div class="done-stat"><div class="val" id="dn-xp">+0</div><div class="lbl">XP</div></div>
+  </div>
+  <p>Завтра з'являться нові карточки.<br>А поки — заслужена кава ☕</p>
+  <button class="btn btn-latte" style="max-width:280px" onclick="App.backToDash()">На головну</button>
+</div>
+
+<!-- ══ SCRIPT ════════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const SCRIPT_URL = 'https://script.google.com/macros/s/ВСТАВТЕ_ВАШ_URL/exec';
+
+// ── TELEGRAM ──────────────────────────────────────────────────────────────────
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#1C0A00'); tg.setBackgroundColor('#FDF8F2'); }
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const S = {
+  phone:'', cards:[], idx:0, total:0, completed:0, xp:0, streak:0,
+  phase:'idle',      // idle | listen | result | saving
+  text:'', score:null,
+  holding:false, rec:null, timer:null,
+  sessionScores:[],
+};
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function apiGet(params){
+  const u = new URL(SCRIPT_URL);
+  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+  const r = await fetch(u,{redirect:'follow'});
+  return r.json();
+}
+async function apiPost(body){
+  const r = await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),redirect:'follow'});
+  return r.json();
+}
+
+// ── SCREEN ────────────────────────────────────────────────────────────────────
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── APP ───────────────────────────────────────────────────────────────────────
+const App = {
+
+  async init(){
+    const p = new URLSearchParams(location.search);
+    S.phone = p.get('phone') || '';
+    if(S.phone){ show('s-loading'); await this.load(); }
+    else { show('s-welcome'); }
+  },
+
+  async welcome(){
+    // Якщо в Telegram — беремо user_id як ідентифікатор
+    if(tg?.initDataUnsafe?.user){
+      S.phone = String(tg.initDataUnsafe.user.id);
+    } else {
+      // Браузерний fallback
+      const ph = prompt('Ваш номер телефону (цифри):','');
+      if(!ph) return;
+      S.phone = ph.replace(/\D/g,'');
+    }
+    show('s-loading');
+    await this.load();
+  },
+
+  async load(){
+    try{
+      document.getElementById('load-sub').textContent = 'Підключаюсь до таблиці…';
+      const d = await apiGet({action:'getCards', phone:S.phone});
+      S.cards     = d.cards     || [];
+      S.total     = d.total     || 0;
+      S.completed = d.completed || 0;
+      S.xp        = d.xp        || 0;
+      S.streak    = d.streak    || 0;
+      this.renderDash();
+      show('s-dash');
+    } catch(e){
+      console.error(e);
+      // показуємо дашборд з помилкою
+      S.cards=[];
+      this.renderDash();
+      show('s-dash');
+    }
+  },
+
+  renderDash(){
+    const name = tg?.initDataUnsafe?.user?.first_name || '';
+    const rem  = S.total - S.completed;
+    _t('d-hello', name ? `Привіт, ${name}! ☕` : 'Привіт! ☕');
+    _t('d-sub',   S.cards.length ? `Сьогодні ${S.cards.length} карточок` : 'Всі виконано 🎉');
+    _t('d-streak',`🔥 ${S.streak}`);
+    _t('s-done-cnt', S.completed);
+    _t('s-rem',   rem);
+    _t('s-xp',    S.xp);
+    _t('s-streak',S.streak);
+    _t('d-prog-lbl',`${S.completed}/${S.total}`);
+    const pct = S.total ? Math.round(S.completed/S.total*100) : 0;
+    _style('d-prog-fill','width', pct+'%');
+    const btn = _el('d-btn');
+    if(!S.cards.length){ btn.textContent='✅ Всі виконано — завтра ще!'; btn.disabled=true; }
+    else { btn.textContent=`☕ Почати сесію (${S.cards.length} карточок)`; btn.disabled=false; }
+  },
+
+  startSession(){
+    if(!S.cards.length) return;
+    S.idx=0; S.sessionScores=[];
+    this.renderCard();
+    _el('sp-back').style.display='block';
+    show('s-speak');
+  },
+
+  renderCard(){
+    const c = S.cards[S.idx];
+    _t('sp-counter',`${S.idx+1}/${S.cards.length}`);
+
+    // dots
+    const dots = S.cards.map((_,i)=>{
+      const cl = i<S.idx?'done':i===S.idx?'active':'pending';
+      return `<div class="dot ${cl}"></div>`;
+    }).join('');
+    _el('sp-dots').innerHTML = dots;
+
+    // phrase
+    _t('p-phrase', c.phrase||'');
+    _t('p-tr',     c.translation||'');
+    _t('p-hint',   c.hint ? '📝 '+c.hint : '');
+    const cm = _el('p-comment');
+    if(c.comment){ cm.textContent=c.comment; cm.style.display='block'; }
+    else cm.style.display='none';
+
+    this.setPhase('idle');
+  },
+
+  // ── Phase ────────────────────────────────────────
+  setPhase(ph){
+    S.phase = ph;
+    const ids = ['mic-hint','waves','live-box','stop-btn','result-block','saving-block','act-btns','sp-err'];
+    ids.forEach(id=>_hide(id));
+
+    const btn = _el('mic-btn');
+    btn.style.display='flex';
+    btn.className='mic-btn idle';
+    btn.textContent='🎤';
+
+    if(ph==='idle'){
+      _show('mic-hint');
+    }
+    else if(ph==='listen'){
+      _show('waves'); _el('waves').classList.add('on');
+      _show('live-box'); _show('stop-btn');
+      btn.className='mic-btn live'; btn.textContent='🎙️';
+      _t('live-box','Говори зараз…');
+    }
+    else if(ph==='result'){
+      _el('result-block').style.display='flex';
+      _show('act-btns');
+      btn.style.display='none';
+    }
+    else if(ph==='saving'){
+      _show('saving-block');
+      btn.style.display='none';
+    }
+  },
+
+  // ── Mic touch (hold) ─────────────────────────────
+  _ht:null,
+  ts(e){ e.preventDefault(); this._ht=setTimeout(()=>{ S.holding=true; if(S.phase==='idle') this.startListen(); },120); },
+  te(e){ e.preventDefault(); clearTimeout(this._ht); if(S.holding){ S.holding=false; if(S.phase==='listen') this.stopListen(); } },
+  mc(){ if(S.holding) return; if(S.phase==='idle') this.startListen(); else if(S.phase==='listen') this.stopListen(); },
+
+  // ── STT ─────────────────────────────────────────
+  startListen(){
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){ this.err('Браузер не підтримує голос. Спробуй Chrome.'); return; }
+
+    S.text=''; S.rec=new SR();
+    S.rec.lang='en-US'; S.rec.continuous=true; S.rec.interimResults=true;
+
+    S.rec.onresult=(e)=>{
+      let fin='',int='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const t=e.results[i][0].transcript;
+        if(e.results[i].isFinal) fin+=t; else int+=t;
+      }
+      if(fin) S.text+=fin;
+      const shown=(S.text+int).trim();
+      _t('live-box', shown||'Говори зараз…');
+    };
+
+    S.rec.onerror=(e)=>{ if(e.error!=='no-speech') this.err('Помилка: '+e.error); this.stopListen(); };
+    S.rec.onend=()=>{ if(S.phase==='listen') this.stopListen(); };
+
+    S.rec.start();
+    this.setPhase('listen');
+
+    // 30с максимум
+    S.timer=setTimeout(()=>{ if(S.phase==='listen') this.stopListen(); },30000);
+  },
+
+  stopListen(){
+    clearTimeout(S.timer);
+    try{ S.rec?.stop(); }catch(_){}
+    S.rec=null;
+    const txt=S.text.trim();
+    if(!txt){ this.setPhase('idle'); return; }
+    this.calcScore(txt);
+  },
+
+  calcScore(rec){
+    const c=S.cards[S.idx];
+    const norm=s=>s.toLowerCase().replace(/[^a-z\s']/g,'').trim();
+    const ref=norm(c.phrase).split(' ').filter(Boolean);
+    const got=norm(rec).split(' ').filter(Boolean);
+    const res=ref.map(w=>({w,ok:got.includes(w)}));
+    const score=ref.length?Math.round(res.filter(r=>r.ok).length/ref.length*100):0;
+    S.score=score;
+    S.sessionScores.push(score);
+    this.renderResult(score,rec,res);
+    this.setPhase('result');
+    this.animScore(score);
+  },
+
+  renderResult(score,rec,res){
+    const col=score>=85?'var(--mint)':score>=60?'var(--amber)':'var(--berry)';
+    _style('score-num','color',col); _t('score-num',score+'%');
+    _style('score-bar','width',score+'%'); _style('score-bar','background',col);
+    _t('recog-txt',`"${rec}"`);
+    _el('word-row').innerHTML=res.map(r=>`<div class="wchip ${r.ok?'ok':'bad'}">${r.w} ${r.ok?'✓':'✗'}</div>`).join('');
+    const fb=score>=90?['🏆','Бездоганно! Навіть BBC заздрить.']:
+             score>=75?['⭐','Чудово! Ти звучиш як місцевий.']:
+             score>=60?['☕','Непогано! Ще одна кава і все складеться.']:
+                       ['💪','Продовжуй. Рим теж не за один день будували.'];
+    _t('fb-ico',fb[0]); _t('fb-txt',fb[1]);
+    _el('btn-retry').style.display=score>=80?'none':'block';
+    _t('btn-next', S.idx>=S.cards.length-1?'Завершити сесію ✅':'Наступна карточка →');
+  },
+
+  animScore(target){
+    const el=_el('score-num'); let cur=0;
+    const step=()=>{ cur=Math.min(cur+2,target); el.textContent=cur+'%'; if(cur<target) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  },
+
+  retry(){ S.text=''; S.score=null; this.setPhase('idle'); },
+
+  async next(){
+    this.setPhase('saving');
+    try{
+      await apiPost({action:'saveResult', phone:S.phone, card_id:S.cards[S.idx].id, score:S.score||0});
+    }catch(_){}
+
+    if(S.idx<S.cards.length-1){
+      S.idx++; S.text=''; S.score=null; this.renderCard();
+    } else {
+      // done screen
+      const avg=S.sessionScores.length?Math.round(S.sessionScores.reduce((a,b)=>a+b,0)/S.sessionScores.length):0;
+      const xpEarned=S.sessionScores.length*5;
+      _t('dn-cards',S.sessionScores.length);
+      _t('dn-avg',avg+'%');
+      _t('dn-xp','+'+xpEarned);
+      show('s-done');
+    }
+  },
+
+  backToDash(){
+    clearTimeout(S.timer);
+    try{ S.rec?.stop(); }catch(_){}
+    S.rec=null; S.idx=0; S.text=''; S.score=null;
+    show('s-loading');
+    this.load();
+  },
+
+  err(msg){ _show('sp-err'); _t('sp-err',msg); },
+};
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+const _el=id=>document.getElementById(id);
+const _t=(id,v)=>{ const e=_el(id); if(e) e.textContent=v; };
+const _style=(id,prop,val)=>{ const e=_el(id); if(e) e.style[prop]=val; };
+const _show=id=>{ const e=_el(id); if(e) e.style.display=''; };
+const _hide=id=>{ const e=_el(id); if(e) e.style.display='none'; };
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>App.init());
+</script>
+</body>
+</html>
