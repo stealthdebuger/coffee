@@ -719,7 +719,7 @@ const App = {
   async next(){
     this.setPhase('saving');
     try{
-      await apiSave(S.phone, S.cards[S.idx].id, S.score||0);
+      await apiGet({action:'saveResult', phone:S.phone, card_id:S.cards[S.idx].id, score:S.score||0});
     }catch(_){}
 
     if(S.idx<S.cards.length-1){
